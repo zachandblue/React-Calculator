@@ -6,7 +6,8 @@ import Input from './Input';
 import Keypad from './Keypad';
 
 const Wrapper = styled.div`
-  width: 400px;
+  width: 100%;
+  max-width: 400px;
   height: 600px;
   margin: auto;
   background: black;
@@ -19,25 +20,29 @@ class App extends Component {
     this.state = {
       input: 0,
       factor: '',
-      function: '',
-      result: ''
+      operation: ''
     };
 
     this.handleKeyDown = this.handleKeyDown.bind(this);
     this.calculate = this.calculate.bind(this);
-    this.buttonPush = this.buttonPush.bind(this);
+    this.setOperation = this.setOperation.bind(this);
     this.clear = this.clear.bind(this);
     this.plusOrMinus = this.plusOrMinus.bind(this);
     this.percent = this.percent.bind(this);
     this.clickNumber = this.clickNumber.bind(this);
   }
 
-  handleKeyDown(operator) {
+  handleKeyDown() {
     document.body.addEventListener('keydown', e => {
-      console.log(e.key);
       e.preventDefault();
 
-      if (e.key.match(/[0-9]|\.|Backspace/) && !this.state.function) {
+      if (e.key.match('Escape')) {
+        this.clear();
+      }
+
+      this.setOperation(e.key);
+
+      if (e.key.match(/[0-9]|\.|Backspace/) && !this.state.operation) {
         let input = this.state.input.toString();
 
         if (e.key.match('Backspace')) {
@@ -46,7 +51,6 @@ class App extends Component {
         }
 
         if (e.key.match(/\./)) {
-          //let input = this.state.input;
           input = input.toString() + e.key;
           console.log(input + e.key);
           this.setState({ input });
@@ -56,23 +60,7 @@ class App extends Component {
         this.setState({ input: parseFloat(input, 10) || 0 });
       }
 
-      if (e.key.match('Escape')) {
-        this.clear();
-      }
-      if (e.key.match(/\//)) {
-        this.setState({ function: '/' });
-      }
-      if (e.key.match(/\*|x|X/)) {
-        this.setState({ function: '*' });
-      }
-      if (e.key.match('-')) {
-        this.setState({ function: '-' });
-      }
-      if (e.key.match(/\+/)) {
-        this.setState({ function: '+' });
-      }
-
-      if (e.key.match(/[0-9]|\.|Backspace/) && this.state.function) {
+      if (e.key.match(/[0-9]|\.|Backspace/) && this.state.operation) {
         let factor = this.state.factor.toString();
 
         if (e.key.match('Backspace')) {
@@ -90,9 +78,8 @@ class App extends Component {
 
         this.setState({ factor: parseFloat(factor + e.key, 10) });
       }
-
-      console.log('keypush');
     });
+
     document.body.addEventListener('keydown', e => {
       if (e.key.match(/=|Enter/)) {
         this.calculate();
@@ -100,23 +87,48 @@ class App extends Component {
     });
   }
 
-  buttonPush(button) {
+  setOperation(button) {
     if (button === '/') {
-      this.setState({ function: '/' });
+      if (this.state.operation) {
+        if (this.state.operation === '/') return;
+        this.setState({ operation: '/' });
+        return;
+      }
+      this.calculate();
+      this.setState({ operation: '/' });
     }
     if (button === '*') {
-      this.setState({ function: '*' });
+      if (this.state.operation) {
+        if (this.state.operation === '*') return;
+        this.setState({ operation: '*' });
+        return;
+      }
+
+      this.calculate();
+      this.setState({ operation: '*' });
     }
     if (button === '-') {
-      this.setState({ function: '-' });
+      if (this.state.operation) {
+        if (this.state.operation === '-') return;
+        this.setState({ operation: '-' });
+        return;
+      }
+      this.calculate();
+      this.setState({ operation: '-' });
     }
     if (button === '+') {
-      this.setState({ function: '+' });
+      if (this.state.operation) {
+        if (this.state.operation === '') return;
+        this.setState({ operation: '+' });
+        return;
+      }
+      this.calculate();
+      this.setState({ operation: '+' });
     }
   }
 
   clear() {
-    this.setState({ input: 0, factor: '', function: '' });
+    this.setState({ input: 0, factor: '', operation: '' });
   }
 
   plusOrMinus() {
@@ -147,7 +159,7 @@ class App extends Component {
     let factor = this.state.factor;
 
     number = number.toString();
-    if (!this.state.function) {
+    if (!this.state.operation) {
       if (number === '.') {
         let input = this.state.input;
         input = input.toString() + number;
@@ -159,7 +171,7 @@ class App extends Component {
       this.setState({ input: parseFloat(input, 10) || 0 });
     }
 
-    if (this.state.function) {
+    if (this.state.operation) {
       if (number === '.') {
         let factor = this.state.factor;
         factor = factor.toString() + number;
@@ -173,27 +185,25 @@ class App extends Component {
   }
 
   calculate() {
-    console.log('thinking');
     const firstInput = this.state.input;
     const secondInput = parseFloat(this.state.factor);
-    console.log(firstInput);
-    console.log(secondInput);
-    console.log(firstInput * secondInput);
+
     let result;
-    switch (this.state.function) {
+    switch (this.state.operation) {
       case '/':
-        result = firstInput / secondInput;
+        result = firstInput / (secondInput || firstInput);
         this.setState({ input: result, factor: 0 });
         break;
       case '*':
-        result = firstInput * secondInput;
+        result = firstInput * (secondInput || firstInput);
         this.setState({ input: result, factor: 0 });
         break;
       case '-':
-        this.setState({ input: firstInput - secondInput, factor: 0 });
+        result = firstInput - (secondInput || firstInput);
+        this.setState({ input: result, factor: 0 });
         break;
       case '+':
-        result = firstInput + secondInput;
+        result = firstInput + (secondInput || firstInput);
         console.log(result);
         this.setState({ input: result, factor: 0 });
         break;
@@ -204,7 +214,7 @@ class App extends Component {
   componentDidMount() {
     this.handleKeyDown();
 
-    this.buttonPush();
+    this.setOperation();
   }
   render() {
     return (
@@ -214,13 +224,14 @@ class App extends Component {
           input={this.state.factor ? this.state.factor : this.state.input}
         />
         <Keypad
-          buttonPush={this.buttonPush}
+          setOperation={this.setOperation}
           handleKeyDown={this.handleKeyDown}
           clear={this.clear}
           plusOrMinus={this.plusOrMinus}
           percent={this.percent}
           clickNumber={this.clickNumber}
           calculate={this.calculate}
+          operation={this.state.operation}
         />
       </Wrapper>
     );

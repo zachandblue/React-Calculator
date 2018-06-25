@@ -5,19 +5,14 @@ const Wrapper = styled.div`
   display: grid;
   grid-template-columns: 1fr 1fr 1fr 1fr;
   grid-template-rows: 1fr 1fr 1fr 1fr 1fr;
-
   grid-gap: 15px 15px;
-
   margin: 10px auto;
   align-items: center;
   width: 95%;
 `;
 
-// const lightGrey = #A1A1A1;
-// const darkGrey = #333333;
-// const orange = #FE9400;
-
 const Circle = styled.button`
+  touch-action: manipulation;
   align-items: center;
   grid-column: span 1;
   grid-row: span 1;
@@ -30,14 +25,20 @@ const Circle = styled.button`
   border-radius: 50%;
   background: #a1a1a1;
   background: ${props =>
-    (props.orange && '#FE9400') || (props.darkGrey && '#333333')}
-
+    (props.orange && '#FE9400') ||
+    (props.darkGrey && '#333333') ||
+    (props.selected && '#ffffff')}
   color: white;
-  font-size: 2em;
+  font-size: 2.5em;
   outline: none;
 
   &:active {
     filter: grayscale(70%) brightness(130%);
+  }
+
+  &.selected {
+    background: white;
+    color: #FE9400;
   }
 
 
@@ -55,13 +56,18 @@ const LongCircle = Circle.extend`
 
 class Keypad extends Component {
   render() {
+    const orange = 'orange';
     return (
-      <Wrapper>
+      <Wrapper ontouchstart="">
         <Circle onClick={this.props.clear}>AC</Circle>
         <Circle onClick={this.props.plusOrMinus}>+/-</Circle>
         <Circle onClick={this.props.percent}>%</Circle>
-        <Circle onClick={() => this.props.buttonPush('/')} orange>
-          /
+        <Circle
+          onClick={() => this.props.setOperation('/')}
+          orange
+          className={this.props.operation === '/' ? 'selected' : ''}
+        >
+          ÷
         </Circle>
         <Circle onClick={() => this.props.clickNumber(7)} darkGrey>
           7
@@ -72,7 +78,11 @@ class Keypad extends Component {
         <Circle onClick={() => this.props.clickNumber(9)} darkGrey>
           9
         </Circle>
-        <Circle onClick={() => this.props.buttonPush('*')} orange>
+        <Circle
+          onClick={() => this.props.setOperation('*')}
+          orange
+          className={this.props.operation === '*' ? 'selected' : ''}
+        >
           X
         </Circle>
         <Circle onClick={() => this.props.clickNumber(4)} darkGrey>
@@ -84,7 +94,11 @@ class Keypad extends Component {
         <Circle onClick={() => this.props.clickNumber(6)} darkGrey>
           6
         </Circle>
-        <Circle onClick={() => this.props.buttonPush('-')} orange>
+        <Circle
+          onClick={() => this.props.setOperation('-')}
+          orange
+          className={this.props.operation === '-' ? 'selected' : ''}
+        >
           -
         </Circle>
         <Circle onClick={() => this.props.clickNumber(1)} darkGrey>
@@ -96,7 +110,11 @@ class Keypad extends Component {
         <Circle onClick={() => this.props.clickNumber(3)} darkGrey>
           3
         </Circle>
-        <Circle onClick={() => this.props.buttonPush('+')} orange>
+        <Circle
+          onClick={() => this.props.setOperation('+')}
+          orange
+          className={this.props.operation === '+' ? 'selected' : ''}
+        >
           +
         </Circle>
         <LongCircle onClick={() => this.props.clickNumber(0)}>0</LongCircle>
