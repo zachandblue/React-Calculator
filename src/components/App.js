@@ -7,11 +7,14 @@ import Keypad from './Keypad';
 
 const Wrapper = styled.div`
   width: 100%;
-  max-width: 400px;
+  max-width: 360px;
   height: 600px;
   margin: auto;
   background: black;
   padding: 10px;
+  @media (min-width: 680px) {
+    margin-top: 40px;
+  }
 `;
 class App extends Component {
   constructor() {
@@ -19,6 +22,7 @@ class App extends Component {
 
     this.state = {
       input: 0,
+      savedInput: '',
       factor: '',
       operation: ''
     };
@@ -42,12 +46,17 @@ class App extends Component {
 
       this.setOperation(e.key);
 
-      if (e.key.match(/[0-9]|\.|Backspace/) && !this.state.operation) {
+      if (
+        e.key.match(/[0-9]|\.|Backspace/) &&
+        !this.state.operation &&
+        this.state.input.toString().length <= 8
+      ) {
         let input = this.state.input.toString();
+        let savedInput = this.state.savedInput.toString();
 
         if (e.key.match('Backspace')) {
           input = input.toString().slice(0, -1);
-          this.setState({ input });
+          this.setState({ input, savedInput: input });
         }
 
         if (e.key.match(/\./)) {
@@ -57,10 +66,17 @@ class App extends Component {
           return;
         }
         input = input + e.key;
-        this.setState({ input: parseFloat(input, 10) || 0 });
+        this.setState({
+          input: parseFloat(input, 10) || 0,
+          savedInput: parseFloat(input, 10) || 0
+        });
       }
 
-      if (e.key.match(/[0-9]|\.|Backspace/) && this.state.operation) {
+      if (
+        e.key.match(/[0-9]|\.|Backspace/) &&
+        this.state.operation &&
+        this.state.factor.toString().length <= 8
+      ) {
         let factor = this.state.factor.toString();
 
         if (e.key.match('Backspace')) {
@@ -90,56 +106,72 @@ class App extends Component {
   setOperation(button) {
     if (button === '/') {
       if (this.state.operation) {
+        if (this.state.factor) {
+          this.calculate();
+        }
         if (this.state.operation === '/') return;
         this.setState({ operation: '/' });
         return;
       }
-      this.calculate();
+      // this.calculate();
       this.setState({ operation: '/' });
     }
     if (button === '*') {
       if (this.state.operation) {
+        if (this.state.factor) {
+          this.calculate();
+        }
         if (this.state.operation === '*') return;
         this.setState({ operation: '*' });
         return;
       }
 
-      this.calculate();
+      // this.calculate();
       this.setState({ operation: '*' });
     }
     if (button === '-') {
       if (this.state.operation) {
+        if (this.state.factor) {
+          this.calculate();
+        }
         if (this.state.operation === '-') return;
         this.setState({ operation: '-' });
         return;
       }
-      this.calculate();
+      // this.calculate();
       this.setState({ operation: '-' });
     }
     if (button === '+') {
       if (this.state.operation) {
+        if (this.state.factor) {
+          this.calculate();
+        }
         if (this.state.operation === '') return;
         this.setState({ operation: '+' });
         return;
       }
-      this.calculate();
+      // this.calculate();
       this.setState({ operation: '+' });
     }
   }
 
   clear() {
-    this.setState({ input: 0, factor: '', operation: '' });
+    this.setState({ input: 0, factor: '', operation: '', savedInput: '' });
   }
 
   plusOrMinus() {
     const input = this.state.input;
     const factor = this.state.factor;
-    if (!factor) {
+    const operation = this.state.operation;
+    if (!factor && !operation) {
       if (input === 0) {
         this.setState({ input: '-' + input });
       } else {
         this.setState({ input: input * -1 });
       }
+    }
+    if (!factor && operation) {
+      this.setState({ factor: '-' });
     } else {
       if (factor === 0) {
         this.setState({ factor: '-' + factor });
@@ -151,15 +183,20 @@ class App extends Component {
 
   percent() {
     const input = this.state.input;
-    this.setState({ input: input * 0.01 });
+    const savedInput = this.state.savedInput;
+    const factor = this.state.factor;
+    if (!factor)
+      this.setState({ input: input * 0.01, savedInput: input * 0.01 });
+    if (factor) this.setState({ factor: factor * 0.01 });
   }
 
   clickNumber(number) {
     let input = this.state.input;
     let factor = this.state.factor;
+    let savedInput = this.state.savedInput;
 
     number = number.toString();
-    if (!this.state.operation) {
+    if (!this.state.operation && this.state.input.toString().length <= 8) {
       if (number === '.') {
         let input = this.state.input;
         input = input.toString() + number;
@@ -168,10 +205,13 @@ class App extends Component {
         return;
       }
       input = input + number;
-      this.setState({ input: parseFloat(input, 10) || 0 });
+      this.setState({
+        input: parseFloat(input, 10) || 0,
+        savedInput: parseFloat(input, 10) || 0
+      });
     }
 
-    if (this.state.operation) {
+    if (this.state.operation && this.state.factor.toString().length <= 8) {
       if (number === '.') {
         let factor = this.state.factor;
         factor = factor.toString() + number;
@@ -187,25 +227,42 @@ class App extends Component {
   calculate() {
     const firstInput = this.state.input;
     const secondInput = parseFloat(this.state.factor);
+    const savedInput = this.state.savedInput;
 
     let result;
     switch (this.state.operation) {
       case '/':
-        result = firstInput / (secondInput || firstInput);
-        this.setState({ input: result, factor: 0 });
+        result = firstInput / (secondInput || savedInput);
+        this.setState({
+          input: result,
+          factor: '',
+          savedInput: secondInput || savedInput
+        });
         break;
       case '*':
-        result = firstInput * (secondInput || firstInput);
-        this.setState({ input: result, factor: 0 });
+        result = firstInput * (secondInput || savedInput);
+        this.setState({
+          input: result,
+          factor: '',
+          savedInput: secondInput || savedInput
+        });
         break;
       case '-':
-        result = firstInput - (secondInput || firstInput);
-        this.setState({ input: result, factor: 0 });
+        result = firstInput - (secondInput || savedInput);
+        this.setState({
+          input: result,
+          factor: '',
+          savedInput: secondInput || savedInput
+        });
         break;
       case '+':
-        result = firstInput + (secondInput || firstInput);
+        result = firstInput + (secondInput || savedInput);
         console.log(result);
-        this.setState({ input: result, factor: 0 });
+        this.setState({
+          input: result,
+          factor: '',
+          savedInput: secondInput || savedInput
+        });
         break;
       default:
         console.log('default');

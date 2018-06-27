@@ -8,27 +8,31 @@ const StyledInput = styled.div`
   width: 95%;
   margin: 0 auto;
   outline: none;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: flex-end;
 `;
 
 const InputH1 = styled.h1`
-  font-size: 15vh;
-  font-size: 23vw;
+  font-size: 13vh;
   overflow: hidden;
   color: white;
-  text-align: right;
-  margin: 0;
+  ${'' /* text-align: right; */} margin: 0;
   font-weight: lighter;
 
   &.small {
-    font-size: 20vw;
+    font-size: 11vh;
   }
   &.smaller {
-    font-size: 17vw;
-    text-align: center;
+    font-size: 9vh;
+
+    margin: 0 auto;
   }
   &.smallest {
-    font-size: 15vw;
-    text-align: center;
+    font-size: 8vh;
+
+    margin: 0 auto;
   }
 `;
 
@@ -46,7 +50,9 @@ class Input extends Component {
       <div>
         <StyledInput onKeyPress={this.props.handleKeyDown}>
           <InputH1 className={fontSize()}>
-            {this.props.input.toLocaleString('en')}
+            {this.props.input > 999999999
+              ? this.props.input.toExponential()
+              : this.props.input.toLocaleString('en')}
           </InputH1>
         </StyledInput>
       </div>
